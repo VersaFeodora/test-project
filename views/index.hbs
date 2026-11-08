@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; line-height: 1.6; color: #333; background-color: #f4f7f6; }
+        .container { max-width: 1600px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        
+        /* Layout dua kolom */
+        .columns { display: grid; grid-template-columns: 1fr 1.6fr; gap: 30px; align-items: start; }
+        .column { min-width: 0; }
+        .column h2 { margin-top: 0; }
+        @media (max-width: 1100px) {
+            .columns { grid-template-columns: 1fr; }
+        }
+
+        /* Header & Info */
+        .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        h1, h2 { color: #0056ac; margin: 0; }
+        h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        /* Toolbar (search + tombol tambah) */
+        .search-container { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .search-container form { display: flex; gap: 10px; flex: 1; min-width: 220px; }
+        
+        input[type="text"], input[type="number"], select { padding: 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; }
+        input.flex-grow { flex-grow: 1; }
+        
+        /* Button Styles */
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 14px; text-decoration: none; display: inline-block; text-align: center; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0069d9; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-add { white-space: nowrap; }
+        
+        /* Style untuk Tabel */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 30px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background-color: #44a4a5; color: white; text-transform: uppercase; font-size: 13px; }
+        tr:hover { background-color: #f9f9f9; }
+        
+        .status-ok { color: #28a745; font-weight: bold; font-size: 14px; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .badge-active { background: #e2f9e1; color: #1e7e34; }
+        .badge-category { background: #e7f1ff; color: #007bff; border: 1px solid #cfe2ff; }
+
+        .action-group { display: flex; gap: 5px; }
+
+        /* Modal / Popup */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: white; border-radius: 12px; padding: 25px 30px; width: 100%; max-width: 460px; box-shadow: 0 10px 40px rgba(0,0,0,0.25); animation: popIn 0.2s ease; }
+        .modal-box h3 { margin: 0 0 20px; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .modal-box label { display: block; font-size: 13px; font-weight: bold; margin: 12px 0 4px; color: #555; }
+        .modal-box input, .modal-box select { width: 100%; box-sizing: border-box; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
+        .modal-box.modal-confirm { max-width: 400px; }
+        .modal-box.modal-confirm p { margin: 0; color: #555; }
+        @keyframes popIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-flex">
+            <div>
+                <h1>Admin Panel</h1>
+            </div>
+            <a href="#" class="btn btn-danger" onclick="confirmLogout(event)">Logout</a>
+        </div>
+
+        <div class="columns">
+
+            <!-- KOLOM KIRI: KATEGORI -->
+            <div class="column">
+                <h2>Category</h2>
+                <div class="search-container">
+                    <form action="/" method="GET">
+                        <input type="text" name="search" class="flex-grow" placeholder="Search category by name..." value="{{search}}">
+                        <button type="submit" class="btn btn-info">Search</button>
+                    </form>
+                    <button type="button" class="btn btn-success btn-add" onclick="openModal('modal-add-category', 'add-cat-name')">+ Add Category</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">ID</th>
+                            <th style="width: 40%;">Category Name</th>
+                            <th style="width: 30%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each categories}}
+                            <tr>
+                                <td><strong>#{{id}}</strong></td>
+                                <td>{{name}}</td>
+                                <td>
+                                    <div class="action-group">
+                                        <button type="button" class="btn btn-warning"
+                                            data-id="{{id}}"
+                                            data-name="{{name}}"
+                                            onclick="openEditCategory(this)">Edit</button>
+                                        <form action="/delete-category" method="POST" id="form-del-cat-{{id}}">
+                                            <input type="hidden" name="id" value="{{id}}">
+                                            <button type="button" class="btn btn-danger" onclick="confirmDelete('form-del-cat-{{id}}', 'this category')">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {{else}}
+                            <tr><td colspan="3" style="text-align: center; color: #888;">This table is empty</td></tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- KOLOM KANAN: PRODUK -->
+            <div class="column">
+                <h2>Product</h2>
+                
+                <div class="search-container">
+                    <form action="/" method="GET">
+                        <input type="text" name="search" class="flex-grow" placeholder="Search Product by name" value="{{search}}">
+                        <button type="submit" class="btn btn-info">Search</button>
+                    </form>
+                    <button type="button" class="btn btn-success btn-add" onclick="openModal('modal-add-product', 'add-prod-name')">+ Add Product</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Product Name</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Category</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each products}}
+                            <tr>
+                                <td>#{{id}}</td>
+                                <td><strong>{{name}}</strong></td>
+                                <td>{{formatPrice price}}</td>
+                                <td>{{stock}} unit</td>
+                                <td>
+                                    <span class="badge badge-category">
+                                        {{#if category}}{{category.name}}{{else}}No Category{{/if}}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-group">
+                                        <button type="button" class="btn btn-warning"
+                                            data-id="{{id}}"
+                                            data-name="{{name}}"
+                                            data-price="{{price}}"
+                                            data-stock="{{stock}}"
+                                            data-category-id="{{#if category}}{{category.id}}{{/if}}"
+                                            onclick="openEditProduct(this)">Edit</button>
+                                        <form action="/delete-product" method="POST" id="form-del-prod-{{id}}">
+                                            <input type="hidden" name="id" value="{{id}}">
+                                            <button type="button" class="btn btn-danger" onclick="confirmDelete('form-del-prod-{{id}}', 'this product')">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {{else}}
+                            <tr><td colspan="6" style="text-align: center; color: #888;">This table is empty</td></tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI (dipakai untuk Delete & Logout) -->
+    <div class="modal-overlay" id="modal-confirm">
+        <div class="modal-box modal-confirm">
+            <h3 id="confirm-title"></h3>
+            <p id="confirm-text"></p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-confirm')">No</button>
+                <button type="button" class="btn btn-danger" id="confirm-yes">Yes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH KATEGORI -->
+    <div class="modal-overlay" id="modal-add-category">
+        <div class="modal-box">
+            <h3>Add Category</h3>
+            <form action="/add-category" method="POST">
+                <label for="add-cat-name">Category Name</label>
+                <input type="text" name="name" id="add-cat-name" placeholder="Input category name" required>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-category')">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH PRODUK -->
+    <div class="modal-overlay" id="modal-add-product">
+        <div class="modal-box">
+            <h3>Add Product</h3>
+            <form action="/add-product" method="POST">
+                <label for="add-prod-name">Product Name</label>
+                <input type="text" name="name" id="add-prod-name" placeholder="Product Name" required>
+
+                <label for="add-prod-price">Price (Rp)</label>
+                <input type="number" name="price" id="add-prod-price" placeholder="Price (Rp)" required>
+
+                <label for="add-prod-stock">Stock</label>
+                <input type="number" name="stock" id="add-prod-stock" placeholder="Stock" required>
+
+                <label for="add-prod-category">Category</label>
+                <select name="categoryId" id="add-prod-category" required>
+                    <option value="">-- Choose Category --</option>
+                    {{#each categories}}
+                        <option value="{{id}}">{{name}}</option>
+                    {{/each}}
+                </select>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-product')">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT KATEGORI -->
+    <div class="modal-overlay" id="modal-category">
+        <div class="modal-box">
+            <h3>Edit Category</h3>
+            <form action="/edit-category" method="POST">
+                <input type="hidden" name="id" id="edit-cat-id">
+                <label for="edit-cat-name">Category Name</label>
+                <input type="text" name="name" id="edit-cat-name" required>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-category')">Cancel</button>
+                    <button type="submit" class="btn btn-success">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT PRODUK -->
+    <div class="modal-overlay" id="modal-product">
+        <div class="modal-box">
+            <h3>Edit Product</h3>
+            <form action="/edit-product" method="POST">
+                <input type="hidden" name="id" id="edit-prod-id">
+
+                <label for="edit-prod-name">Product Name</label>
+                <input type="text" name="name" id="edit-prod-name" required>
+
+                <label for="edit-prod-price">Price (Rp)</label>
+                <input type="number" name="price" id="edit-prod-price" required>
+
+                <label for="edit-prod-stock">Stock</label>
+                <input type="number" name="stock" id="edit-prod-stock" required>
+
+                <label for="edit-prod-category">Category</label>
+                <select name="categoryId" id="edit-prod-category" required>
+                    <option value="">-- Choose Category --</option>
+                    {{#each categories}}
+                        <option value="{{id}}">{{name}}</option>
+                    {{/each}}
+                </select>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-product')">Cancel</button>
+                    <button type="submit" class="btn btn-success">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id, focusId) {
+            document.getElementById(id).classList.add('open');
+            if (focusId) document.getElementById(focusId).focus();
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        // Klik area gelap di luar kotak untuk menutup
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('open');
+            });
+        });
+
+        // Tombol Escape untuk menutup
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+            }
+        });
+
+        // ===== Edit Kategori =====
+        function openEditCategory(btn) {
+            document.getElementById('edit-cat-id').value = btn.dataset.id;
+            document.getElementById('edit-cat-name').value = btn.dataset.name;
+            openModal('modal-category', 'edit-cat-name');
+        }
+
+        // ===== Edit Produk =====
+        function openEditProduct(btn) {
+            document.getElementById('edit-prod-id').value = btn.dataset.id;
+            document.getElementById('edit-prod-name').value = btn.dataset.name;
+            document.getElementById('edit-prod-price').value = btn.dataset.price;
+            document.getElementById('edit-prod-stock').value = btn.dataset.stock;
+            document.getElementById('edit-prod-category').value = btn.dataset.categoryId;
+            openModal('modal-product', 'edit-prod-name');
+        }
+
+        // ===== Modal Konfirmasi =====
+        let pendingConfirmAction = null;
+
+        function openConfirm({ title, text, yesClass, onConfirm }) {
+            document.getElementById('confirm-title').textContent = title;
+
+            const textEl = document.getElementById('confirm-text');
+            textEl.textContent = text || '';
+            textEl.style.display = text ? 'block' : 'none';
+
+            document.getElementById('confirm-yes').className = 'btn ' + yesClass;
+            pendingConfirmAction = onConfirm;
+            openModal('modal-confirm');
+        }
+
+        document.getElementById('confirm-yes').addEventListener('click', () => {
+            closeModal('modal-confirm');
+            if (pendingConfirmAction) pendingConfirmAction();
+            pendingConfirmAction = null;
+        });
+
+        // Konfirmasi Hapus
+        function confirmDelete(formId, targetName) {
+            openConfirm({
+                title: 'Delete ' + targetName + '?',
+                text: 'The deleted item cannot be restored',
+                yesClass: 'btn-danger',
+                onConfirm: () => document.getElementById(formId).submit()
+            });
+        }
+
+        // Konfirmasi Logout
+        function confirmLogout(event) {
+            event.preventDefault();
+            openConfirm({
+                title: 'Are you sure you want to exit?',
+                text: '',
+                yesClass: 'btn-primary',
+                onConfirm: () => { window.location.href = '/logout'; }
+            });
+        }
+    </script>
+</body>
+</html>
