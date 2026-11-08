@@ -28,6 +28,12 @@
         
         input[type="text"], input[type="number"], select { padding: 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; }
         input.flex-grow { flex-grow: 1; }
+
+        /* Alert */
+        .alert { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 12px 18px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; border: 1px solid transparent; }
+        .alert-error { background: #fdecea; color: #a12622; border-color: #f5c6cb; }
+        .alert-success { background: #e8f6ec; color: #1e7e34; border-color: #c3e6cb; }
+        .alert-close { background: none; border: none; font-size: 20px; line-height: 1; cursor: pointer; color: inherit; }
         
         /* Button Styles */
         .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 14px; text-decoration: none; display: inline-block; text-align: center; }
@@ -77,6 +83,19 @@
             <a href="#" class="btn btn-danger" onclick="confirmLogout(event)">Logout</a>
         </div>
 
+        {{#if error}}
+            <div class="alert alert-error" id="alert-box">
+                <span>{{error}}</span>
+                <button type="button" class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+        {{/if}}
+        {{#if success}}
+            <div class="alert alert-success" id="alert-box">
+                <span>{{success}}</span>
+                <button type="button" class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+        {{/if}}
+
         <div class="columns">
 
             <!-- KOLOM KIRI: KATEGORI -->
@@ -84,7 +103,8 @@
                 <h2>Category</h2>
                 <div class="search-container">
                     <form action="/" method="GET">
-                        <input type="text" name="search" class="flex-grow" placeholder="Search category by name..." value="{{search}}">
+                        <input type="text" name="searchcategory" class="flex-grow" placeholder="Search category by name..." value="{{searchcategory}}">
+                        <input type="hidden" name="searchproduct" value="{{searchproduct}}">
                         <button type="submit" class="btn btn-info">Search</button>
                     </form>
                     <button type="button" class="btn btn-success btn-add" onclick="openModal('modal-add-category', 'add-cat-name')">+ Add Category</button>
@@ -129,7 +149,8 @@
                 
                 <div class="search-container">
                     <form action="/" method="GET">
-                        <input type="text" name="search" class="flex-grow" placeholder="Search Product by name" value="{{search}}">
+                        <input type="text" name="searchproduct" class="flex-grow" placeholder="Search Product by name" value="{{searchproduct}}">
+                        <input type="hidden" name="searchcategory" value="{{searchcategory}}">
                         <button type="submit" class="btn btn-info">Search</button>
                     </form>
                     <button type="button" class="btn btn-success btn-add" onclick="openModal('modal-add-product', 'add-prod-name')">+ Add Product</button>
@@ -228,7 +249,7 @@
                 <label for="add-prod-category">Category</label>
                 <select name="categoryId" id="add-prod-category" required>
                     <option value="">-- Choose Category --</option>
-                    {{#each categories}}
+                    {{#each allCategories}}
                         <option value="{{id}}">{{name}}</option>
                     {{/each}}
                 </select>
@@ -276,7 +297,7 @@
                 <label for="edit-prod-category">Category</label>
                 <select name="categoryId" id="edit-prod-category" required>
                     <option value="">-- Choose Category --</option>
-                    {{#each categories}}
+                    {{#each allCategories}}
                         <option value="{{id}}">{{name}}</option>
                     {{/each}}
                 </select>
@@ -370,6 +391,17 @@
                 onConfirm: () => { window.location.href = '/logout'; }
             });
         }
+
+        // banner
+        (function () {
+            const alertBox = document.getElementById('alert-box');
+            if (!alertBox) return;
+            const url = new URL(window.location);
+            url.searchParams.delete('error');
+            url.searchParams.delete('success');
+            window.history.replaceState({}, '', url);
+            setTimeout(() => alertBox.remove(), 6000);
+        })();
     </script>
 </body>
 </html>
